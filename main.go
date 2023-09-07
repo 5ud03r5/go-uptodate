@@ -61,6 +61,14 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
+
+	// Indexes creation for defined collections
+	// Definitions:
+	applicationCollection := db.CollectionIndex{CollectionName: "applications", IndexType: "text", IndexField: "name"}
+
+	// Index creation:
+	db.CreateIndexes(applicationCollection)
+
     defer db.MongoDBClient.Disconnect(context.Background())
 
 	// Routes:
@@ -76,6 +84,7 @@ func main() {
 	// /v1/applications
 	v1Router.Route("/applications", func(r chi.Router) {
 		r.Post("/", handlers.HandlerUsertApplication)
+		r.Get("/{applicationName}", handlers.HandlerGetApplicationByName)
 	})
 	//
 	// Mounting a router at the end of the handlers

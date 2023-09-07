@@ -27,3 +27,22 @@ func UpsertApplication(application Application) (error) {
 	fmt.Printf("Successfuly updated application: %s", application.Name)
 	return nil
 }
+
+func GetApplicationByName(name string) ([]Application, error) {
+	filter := bson.D{{Key: "name", Value: name}}
+	sort := bson.D{{Key: "version", Value: 1}}
+	opts := options.Find().SetSort(sort)
+	coll := MongoDBClient.Database("uptodate").Collection("applications")
+	cursor, err := coll.Find(context.Background(), filter, opts)
+	if err != nil {
+		fmt.Printf("Could not find applications: %s", err)
+		return nil, err
+	}
+	var results []Application
+	if err = cursor.All(context.Background(), &results); err != nil {
+		fmt.Printf("Error getting applications: %s", err)
+		return nil, err
+
+	}
+	return results, nil
+}

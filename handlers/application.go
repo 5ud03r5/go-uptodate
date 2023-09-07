@@ -4,9 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/5ud03r5/uptodate/db"
+	"github.com/go-chi/chi"
 )
+
+func HandlerGetApplicationByName(w http.ResponseWriter, r *http.Request) {
+	applicationName := chi.URLParam(r, "applicationName")
+	applications, err := db.GetApplicationByName(applicationName)
+	if err != nil {
+		fmt.Printf("Error getting the applications: %s", err)
+		return
+	}
+	respondWithJSON(w, 200, applications)
+}
 
 func HandlerUsertApplication(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
@@ -28,10 +40,12 @@ func HandlerUsertApplication(w http.ResponseWriter, r *http.Request) {
 		Version: params.Version,
 		Source: params.Source,
 		Vulnerable: params.Vulnerable,
+		CreatedAt: time.Now().UTC(),
 	}
 
 	err = db.UpsertApplication(application)
 	if err != nil {
 		fmt.Printf("Error adding application: %s", err)
+		return
 	}
 }
