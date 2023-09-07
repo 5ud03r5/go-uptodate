@@ -83,7 +83,7 @@ func main() {
 	// Applications route:
 	// /v1/applications
 	v1Router.Route("/applications", func(r chi.Router) {
-		r.Post("/", handlers.HandlerUsertApplication)
+		r.Post("/", handlers.HandlerUpsertApplication)
 		r.Get("/{applicationName}", handlers.HandlerGetApplicationByName)
 	})
 	//

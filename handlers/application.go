@@ -20,7 +20,7 @@ func HandlerGetApplicationByName(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, 200, applications)
 }
 
-func HandlerUsertApplication(w http.ResponseWriter, r *http.Request) {
+func HandlerUpsertApplication(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Name string `json:"name"`
 		Version string `json:"version"`
