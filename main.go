@@ -7,14 +7,22 @@ import (
 	"os"
 	"time"
 
+	"github.com/5ud03r5/uptodate/auth"
 	"github.com/5ud03r5/uptodate/db"
 	"github.com/5ud03r5/uptodate/handlers"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
+	"github.com/go-chi/jwtauth"
 	"github.com/joho/godotenv"
 )
+
+func init() {
+	godotenv.Load(".env")
+	secret := os.Getenv("JWT_SECRET")
+	auth.TokenAuth = jwtauth.New("HS256", []byte(secret), nil)
+}
 
 func main() {
 
@@ -65,7 +73,7 @@ func main() {
 	// Indexes creation for defined collections
 	// Definitions:
 	applicationCollection := db.CollectionIndex{CollectionName: "applications", IndexType: "text", IndexField: "name"}
-
+	
 	// Index creation:
 	db.CreateIndexes(applicationCollection)
 
@@ -74,18 +82,41 @@ func main() {
 	// Routes:
 	// Debugger, helps to track CPU performance etc
 	router.Mount("/debug", middleware.Profiler())
-
+	
 	// New sub-router fo v1 handlers
 	// This is a core router for the app
 	v1Router := chi.NewRouter()
+
+	// TODO: OAUTH server logic here with /auth and /token endpoints
+
 	// Here comes all handlers:
 
 	// Applications route:
 	// /v1/applications
 	v1Router.Route("/applications", func(r chi.Router) {
-		r.Post("/", handlers.HandlerUpsertApplication)
-		r.Get("/{applicationName}", handlers.HandlerGetApplicationByName)
+
+		// Public routes
+		r.Group(func(routerPublic chi.Router){
+			routerPublic.Get("/{applicationName}", handlers.HandlerGetApplicationByName)
+		})
+
+		// Private routes
+		r.Group(func(routerPrivate chi.Router){
+			routerPrivate.Use(jwtauth.Verifier(auth.TokenAuth))
+			routerPrivate.Use(authenticatorMiddleware)
+
+			routerPrivate.Post("/", handlers.HandlerUpsertApplication)
+			routerPrivate.Post("/subscribe/{applicationName}", handlers.HandlerSubscribeToApplication)
+		})
 	})
+
+	// Users route:
+	// /v1/users
+	v1Router.Route("/users", func(r chi.Router) {
+		r.Post("/register", handlers.HandlerRegisterUser)
+		r.Post("/login", handlers.HandlerLoginUser)
+	})
+
 	//
 	// Mounting a router at the end of the handlers
 	router.Mount("/v1", v1Router)

@@ -10,14 +10,18 @@ import (
 	"github.com/go-chi/chi"
 )
 
+func HandlerSubscribeToApplication(w http.ResponseWriter, r *http.Request) {
+	
+}
+
 func HandlerGetApplicationByName(w http.ResponseWriter, r *http.Request) {
 	applicationName := chi.URLParam(r, "applicationName")
-	applications, err := db.GetApplicationByName(applicationName)
+	applications, err := db.GetApplicationByName(r.Context(), applicationName)
 	if err != nil {
 		fmt.Printf("Error getting the applications: %s", err)
 		return
 	}
-	respondWithJSON(w, 200, applications)
+	RespondWithJSON(w, 200, applications)
 }
 
 func HandlerUpsertApplication(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +35,7 @@ func HandlerUpsertApplication(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		respondWithError(w, 400, fmt.Sprintf("Error parsing JSON: %s", err))
+		RespondWithError(w, 400, fmt.Sprintf("Error parsing JSON: %s", err))
 		return
 	}
 
@@ -43,7 +47,7 @@ func HandlerUpsertApplication(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: time.Now().UTC(),
 	}
 
-	err = db.UpsertApplication(application)
+	err = db.UpsertApplication(r.Context(), application)
 	if err != nil {
 		fmt.Printf("Error adding application: %s", err)
 		return
