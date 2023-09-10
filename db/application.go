@@ -16,7 +16,7 @@ import (
 func UpsertApplication(ctx context.Context, application Application) (error) {
 	coll := MongoDBClient.Database("uptodate").Collection("applications")
 
-	filter := bson.D{{Key: "_id", Value: convertToId(application.Name, application.Version)}}
+	filter := bson.D{{Key: "_id", Value: applicationConvertToId(application.Name, application.Version)}}
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "name", Value: application.Name},
 	{Key: "created_at", Value: application.CreatedAt}, {Key: "version", Value: application.Version},
 	{Key: "source", Value: application.Source}, {Key: "vulnerable", Value: application.Vulnerable}}}}
@@ -56,7 +56,7 @@ func GetApplicationByName(ctx context.Context, name string) ([]Application, erro
 // version contains _ instead of dots
 // Hashing is for randomness
 
-func convertToId(name string, version string) string {
+func applicationConvertToId(name string, version string) string {
 	concatenated := name + "%" + version
 	resultNoHyphens := strings.ReplaceAll(concatenated, " ", "-")
 	resultNoDots := strings.ReplaceAll(resultNoHyphens, ".", "_")
@@ -70,7 +70,7 @@ func convertToId(name string, version string) string {
 	return id
 }
 
-func convertFromId(id string) (string, string) {
+func applicationConvertFromId(id string) (string, string) {
 	parts := strings.Split(id, "@")
 
 	// Ensure that we have at least two parts

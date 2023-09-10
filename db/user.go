@@ -27,7 +27,7 @@ func RegisterUser(ctx context.Context, username string, email string, endpoint s
 		return User{}, err2
 	}
 
-	id := userConvertToId(username)
+	id := UserConvertToId(username)
 	doc := User{
 		ID: id,
 		Username: username,
@@ -45,20 +45,20 @@ func RegisterUser(ctx context.Context, username string, email string, endpoint s
 	return user, nil
 }
 
-func LoginUser(ctx context.Context, username string, password string) (bool, error) {
-	user, err := GetUserByUsername(ctx, username)
+func LoginUser(ctx context.Context, username string, password string) (User, error) {
+	user, err := getUserByUsername(ctx, username)
 	if err != nil {
-		return false, err
+		return User{}, err
 	}
 	isPasswordOK := auth.VerifyPassword(password, user.Password)
 	if !isPasswordOK {
-		return false, errors.New("password is incorrect")
+		return User{}, errors.New("password is incorrect")
 	}
-	return true, nil
+	return user, nil
 }
 
-func GetUserByUsername(ctx context.Context, username string) (User, error) {
-	id := userConvertToId(username)
+func getUserByUsername(ctx context.Context, username string) (User, error) {
+	id := UserConvertToId(username)
 	filter := bson.D{{Key: "_id", Value: id}}
 	opts := options.FindOne()
 	coll := MongoDBClient.Database("uptodate").Collection("users")
@@ -70,7 +70,7 @@ func GetUserByUsername(ctx context.Context, username string) (User, error) {
 	return result, nil
 }
 
-func userConvertToId(username string) string {
+func UserConvertToId(username string) string {
 	result := strings.ToLower(username)
 
 	hasher := md5.New()
@@ -79,7 +79,7 @@ func userConvertToId(username string) string {
 	return hash
 }
 
-func userConvertFromId(id string) (string) {
+func UserConvertFromId(id string) (string) {
 	// TODO	
 	return ""
 }

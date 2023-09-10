@@ -19,7 +19,7 @@ func authenticatorMiddleware(next http.Handler) http.Handler {
 		}
 
 		if token == nil || jwt.Validate(token) != nil {
-			handlers.RespondWithError(w, 401, "Unauthorized: Missing token or missing required claims")
+			handlers.RespondWithError(w, 401, "Unauthorized: Missing or invalid token")
 		}
 		next.ServeHTTP(w, r)
 	})

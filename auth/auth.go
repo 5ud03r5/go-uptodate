@@ -8,12 +8,14 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-chi/jwtauth"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var TokenAuth *jwtauth.JWTAuth
+var RefreshTokenAuth *jwtauth.JWTAuth
 
 func GetApiKey(headers http.Header) (string, error) {
 	val := headers.Get("Authorization")
@@ -61,4 +63,63 @@ func GeneratePassword(length int) (string, error) {
 	password := hex.EncodeToString(hash[:])
 
 	return password, nil
+}
+
+func GenerateJWTTokens(additionalClaims map[string]interface{}) (string, string, error) {
+	claims := make(map[string]interface{})
+
+	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
+	claims["iat"] = time.Now().Unix()
+	claims["iss"] = "uptodate"
+	
+	for key, value := range additionalClaims {
+        claims[key] = value
+    }
+
+	_, accessToken, err := TokenAuth.Encode(claims)
+	if err != nil {
+		fmt.Printf("Error generating access token")
+		return "", "", err
+	}
+
+	claimsRefresh := make(map[string]interface{})
+
+	claimsRefresh["exp"] = time.Now().Add(time.Hour * 24 * 30).Unix()
+	claimsRefresh["iat"] = time.Now().Unix()
+	claimsRefresh["iss"] = "uptodate"
+
+	// Only this information is required in refresh token
+	for key, value := range additionalClaims {
+		claimsRefresh[key] = value   
+    }
+
+	_, refreshToken, err := RefreshTokenAuth.Encode(claimsRefresh)
+	if err != nil {
+		fmt.Printf("Error generating refresh token")
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+func GenerateJWTAccessToken(sub string, accessType string) (string, error) {
+	// Both refresh and access tokens consist of the same claims
+	// Difference is in sign key so refresh token cannot be used as an access token
+	// This stateless approach allows to keep it simple and fast
+
+	claims := make(map[string]interface{})
+
+	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
+	claims["iat"] = time.Now().Unix()
+	claims["sub"] = sub
+	claims["type"] = accessType
+	claims["iss"] = "uptodate"
+
+	_, accessToken, err := TokenAuth.Encode(claims)
+	if err != nil {
+		fmt.Printf("Error generating access token")
+		return "", err
+	}
+
+	return accessToken, nil
 }

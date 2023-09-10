@@ -35,25 +35,37 @@ func HandlerLoginUser(w http.ResponseWriter, r *http.Request) {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
+
+	type jwtResponse struct {
+		AccessToken string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
 		RespondWithError(w, 400, fmt.Sprintf("Error parsing JSON: %s", err))
 	}
-	isOk, err := db.LoginUser(r.Context(), params.Username, params.Password)
-	if err != nil || !isOk {
+	user, err := db.LoginUser(r.Context(), params.Username, params.Password)
+	if err != nil {
 		RespondWithError(w, 403, fmt.Sprintf("Login error: %s", err))
 	}
 
 	claims := make(map[string]interface{})
-
-	claims["sub"] = params.Username
+	claims["sub"] = user.ID
 	claims["type"] = "user"
 
-	_, token, err := auth.TokenAuth.Encode(claims)
+	accessToken, refreshToken, err := auth.GenerateJWTTokens(claims)
+
 	if err != nil {
-		RespondWithError(w, 400, fmt.Sprintf("Error while generating token: %s", err))
+		RespondWithError(w, 500, err.Error())
 	}
-	RespondWithJSON(w, 200, token)	
+
+	tokensPair := jwtResponse{
+		AccessToken: accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	RespondWithJSON(w, 200, tokensPair)	
 }

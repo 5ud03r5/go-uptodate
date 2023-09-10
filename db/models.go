@@ -9,7 +9,7 @@ import "time"
 // So we have them versioned
 
 type Application struct {
-	_id string `bson:"_id"`
+	ID string `bson:"_id"`
 	Name string	`bson:"name"`
 	CreatedAt time.Time	`bson:"created_at"`
 	Version string	`bson:"version"`
@@ -27,7 +27,7 @@ type User struct {
 }
 
 type UserApplication struct {
-	_id string `bson:"_id"`
+	ID string `bson:"_id"`
 	ApplicationId string `bson:"application_name"`
 	UserId string `bson:"user_id"`
 }

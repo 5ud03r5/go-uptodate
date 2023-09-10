@@ -21,7 +21,9 @@ import (
 func init() {
 	godotenv.Load(".env")
 	secret := os.Getenv("JWT_SECRET")
+	refreshSecret := os.Getenv("JWT_REFRESH_SECRET")
 	auth.TokenAuth = jwtauth.New("HS256", []byte(secret), nil)
+	auth.RefreshTokenAuth = jwtauth.New("HS256", []byte(refreshSecret), nil)
 }
 
 func main() {
@@ -86,9 +88,6 @@ func main() {
 	// New sub-router fo v1 handlers
 	// This is a core router for the app
 	v1Router := chi.NewRouter()
-
-	// TODO: OAUTH server logic here with /auth and /token endpoints
-
 	// Here comes all handlers:
 
 	// Applications route:
@@ -111,10 +110,18 @@ func main() {
 	})
 
 	// Users route:
+	// User specific actions to login and register user
 	// /v1/users
 	v1Router.Route("/users", func(r chi.Router) {
 		r.Post("/register", handlers.HandlerRegisterUser)
 		r.Post("/login", handlers.HandlerLoginUser)
+	})
+
+	// Auth route:
+	// Token handling specific actions
+	// /v1/auth
+	v1Router.Route("/auth", func(r chi.Router) {
+		r.Post("/refresh", handlers.HandlerRefreshToken)
 	})
 
 	//
