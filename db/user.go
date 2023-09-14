@@ -46,7 +46,8 @@ func RegisterUser(ctx context.Context, username string, email string, endpoint s
 }
 
 func LoginUser(ctx context.Context, username string, password string) (User, error) {
-	user, err := getUserByUsername(ctx, username)
+	id := UserConvertToId(username)
+	user, err := GetUserByUsername(ctx, id)
 	if err != nil {
 		return User{}, err
 	}
@@ -57,9 +58,8 @@ func LoginUser(ctx context.Context, username string, password string) (User, err
 	return user, nil
 }
 
-func getUserByUsername(ctx context.Context, username string) (User, error) {
-	id := UserConvertToId(username)
-	filter := bson.D{{Key: "_id", Value: id}}
+func GetUserByUsername(ctx context.Context, username string) (User, error) {
+	filter := bson.D{{Key: "_id", Value: username}}
 	opts := options.FindOne()
 	coll := MongoDBClient.Database("uptodate").Collection("users")
 	var result User

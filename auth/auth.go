@@ -17,6 +17,11 @@ import (
 var TokenAuth *jwtauth.JWTAuth
 var RefreshTokenAuth *jwtauth.JWTAuth
 
+type jwtResponse struct {
+	AccessToken string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
 func GetApiKey(headers http.Header) (string, error) {
 	val := headers.Get("Authorization")
 	if val == "" {
@@ -65,7 +70,7 @@ func GeneratePassword(length int) (string, error) {
 	return password, nil
 }
 
-func GenerateJWTTokens(additionalClaims map[string]interface{}) (string, string, error) {
+func GenerateJWTTokens(additionalClaims map[string]interface{}) (jwtResponse, error) {
 	claims := make(map[string]interface{})
 
 	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
@@ -79,7 +84,7 @@ func GenerateJWTTokens(additionalClaims map[string]interface{}) (string, string,
 	_, accessToken, err := TokenAuth.Encode(claims)
 	if err != nil {
 		fmt.Printf("Error generating access token")
-		return "", "", err
+		return jwtResponse{}, err
 	}
 
 	claimsRefresh := make(map[string]interface{})
@@ -96,10 +101,15 @@ func GenerateJWTTokens(additionalClaims map[string]interface{}) (string, string,
 	_, refreshToken, err := RefreshTokenAuth.Encode(claimsRefresh)
 	if err != nil {
 		fmt.Printf("Error generating refresh token")
-		return "", "", err
+		return jwtResponse{}, err
 	}
 
-	return accessToken, refreshToken, nil
+	tokensPair := jwtResponse{
+		AccessToken: accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	return tokensPair, nil
 }
 
 func GenerateJWTAccessToken(sub string, accessType string) (string, error) {

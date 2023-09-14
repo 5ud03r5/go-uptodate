@@ -8,6 +8,13 @@ import "time"
 // 3. version (numbers + lowercase chars)
 // So we have them versioned
 
+type RegisteredApplication struct {
+	ID string `bson:"_id"`
+	Name string `bson:"name"`
+	RegisteredAt time.Time `bson:"registered_at"`
+	RegisteredBy string `bson:"registered_by"`
+}
+
 type Application struct {
 	ID string `bson:"_id"`
 	Name string	`bson:"name"`
@@ -27,7 +34,7 @@ type User struct {
 }
 
 type UserApplication struct {
-	ID string `bson:"_id"`
-	ApplicationId string `bson:"application_name"`
+	ID string `bson:"_id,omitempty"`
+	ApplicationId string `bson:"application_id"`
 	UserId string `bson:"user_id"`
 }

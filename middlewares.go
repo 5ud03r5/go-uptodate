@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 
-	"github.com/5ud03r5/uptodate/handlers"
+	"github.com/5ud03r5/uptodate/custom"
 	"github.com/go-chi/jwtauth"
 	"github.com/lestrrat-go/jwx/jwt"
 )
@@ -15,12 +15,13 @@ func authenticatorMiddleware(next http.Handler) http.Handler {
 		token, _, err := jwtauth.FromContext(r.Context())
 
 		if err != nil {
-			handlers.RespondWithError(w, 401, fmt.Sprintf("Unauthorized: %s", err))
+			custom.UnauthorizedError(w, err)
 		}
 
 		if token == nil || jwt.Validate(token) != nil {
-			handlers.RespondWithError(w, 401, "Unauthorized: Missing or invalid token")
+			custom.UnauthorizedError(w, errors.New("missing or invalid token"))
 		}
+		
 		next.ServeHTTP(w, r)
 	})
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/5ud03r5/uptodate/auth"
+	"github.com/5ud03r5/uptodate/custom"
 	"github.com/5ud03r5/uptodate/db"
 	"github.com/5ud03r5/uptodate/handlers"
 	"github.com/go-chi/chi"
@@ -39,6 +40,9 @@ func main() {
 	if dbUri == "" {
 		log.Fatal("DATABASE_URL is not found in the env")
 	}
+
+	// Cache def
+	handlers.AppRegistryCache = custom.NewCache()
 	
 	// Defining main router definition
     router := chi.NewRouter()
@@ -74,10 +78,12 @@ func main() {
 
 	// Indexes creation for defined collections
 	// Definitions:
-	applicationCollection := db.CollectionIndex{CollectionName: "applications", IndexType: "text", IndexField: "name"}
-	
+	applicationCollection := db.CollectionIndex{CollectionName: "applications", IndexField: "name"}
+	userApplicationCollectionUID := db.CollectionIndex{CollectionName: "user_application", IndexField: "user_id"}
+	userApplicationCollectionAID := db.CollectionIndex{CollectionName: "user_application", IndexField: "application_id"}
+
 	// Index creation:
-	db.CreateIndexes(applicationCollection)
+	db.CreateIndexes(applicationCollection, userApplicationCollectionAID, userApplicationCollectionUID)
 
     defer db.MongoDBClient.Disconnect(context.Background())
 
@@ -105,22 +111,16 @@ func main() {
 			routerPrivate.Use(authenticatorMiddleware)
 
 			routerPrivate.Post("/", handlers.HandlerUpsertApplication)
+			routerPrivate.Post("/register", handlers.HandlerRegisterApplication)
 			routerPrivate.Post("/subscribe/{applicationName}", handlers.HandlerSubscribeToApplication)
 		})
 	})
 
-	// Users route:
-	// User specific actions to login and register user
-	// /v1/users
-	v1Router.Route("/users", func(r chi.Router) {
-		r.Post("/register", handlers.HandlerRegisterUser)
-		r.Post("/login", handlers.HandlerLoginUser)
-	})
-
 	// Auth route:
-	// Token handling specific actions
 	// /v1/auth
 	v1Router.Route("/auth", func(r chi.Router) {
+		r.Post("/register", handlers.HandlerRegisterUser)
+		r.Post("/login", handlers.HandlerLoginUser)
 		r.Post("/refresh", handlers.HandlerRefreshToken)
 	})
 

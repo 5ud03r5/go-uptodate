@@ -13,7 +13,6 @@ var MongoDBClient *mongo.Client
 
 type CollectionIndex struct {
 	CollectionName string
-	IndexType string
 	IndexField string
 }
 
@@ -40,7 +39,7 @@ func CreateIndexes(collections ...CollectionIndex) {
 	for _, collection := range collections {
 		coll := MongoDBClient.Database("uptodate").Collection(collection.CollectionName)
 		indexModel := mongo.IndexModel{
-			Keys:    bson.M{collection.IndexField: collection.IndexType},
+			Keys:    bson.M{collection.IndexField: 1},
 		}
 		_, err := coll.Indexes().CreateOne(context.Background(), indexModel)
 		if err != nil {

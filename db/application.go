@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -50,6 +51,8 @@ func GetApplicationByName(ctx context.Context, name string) ([]Application, erro
 	return results, nil
 }
 
+
+
 // Id is in form of:
 // Hash@name%version
 // name is lowercase and contains - instead of spaces
@@ -92,4 +95,41 @@ func applicationConvertFromId(id string) (string, string) {
 	name = strings.ReplaceAll(name, "-", " ")
 	version = strings.ReplaceAll(version, "_", ".")
 	return name, version	
+}
+
+// Registered Apps
+
+func RegisterApplication(ctx context.Context, name string, registeredBy string) (error) {
+	coll := MongoDBClient.Database("uptodate").Collection("registered_applications")
+	doc := RegisteredApplication{
+		ID: ApplicationNameConvertToId(name),
+		Name: name,
+		RegisteredAt: time.Now().UTC(),
+		RegisteredBy: registeredBy,
+	}
+	_, err := coll.InsertOne(ctx, doc)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Successfuly registered application: %s", name)
+	return nil
+}
+
+func GetRegisteredApplication(ctx context.Context, name string) (bool) {
+	coll := MongoDBClient.Database("uptodate").Collection("registered_applications")
+	id := ApplicationNameConvertToId(name)
+	filter := bson.D{{Key: "_id", Value: id}}
+	opts := options.FindOne()
+	var result RegisteredApplication
+	err := coll.FindOne(ctx, filter, opts).Decode(&result)
+	return err == nil
+}
+
+func ApplicationNameConvertToId(name string) string {
+	result := strings.ToLower(name)
+
+	hasher := md5.New()
+	hasher.Write([]byte(result))
+	hash := hex.EncodeToString(hasher.Sum(nil))
+	return hash
 }
