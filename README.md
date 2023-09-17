@@ -1,7 +1,7 @@
 # go-uptodate
 Keeps track of security updates of used applications
 
-Still in development...
+## Still in development...
 
 # Description
 Provide a way o being notified on every spotted application vulnerability along with provided by application owner security fix.
