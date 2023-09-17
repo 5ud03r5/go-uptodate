@@ -11,6 +11,37 @@ import (
 	"github.com/5ud03r5/uptodate/responses"
 	"github.com/lestrrat-go/jwx/jwt"
 )
+func HandlerGetServiceAccountAccessToken(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+		AccountName string `json:"account_name"`
+		Password string `json:"password"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err := decoder.Decode(&params)
+	if err != nil {
+		responses.BadRequestError(w, err)
+		return
+	}
+	serviceAccount, err := db.LoginServiceAccount(r.Context(), params.AccountName, params.Password)
+	if err != nil {
+		responses.UnauthorizedError(w, err)
+		return
+	}
+
+	sub := serviceAccount.ID
+	accessType := "service"
+
+	accessToken, err := auth.GenerateJWTAccessToken(sub, accessType)
+
+	if err != nil {
+		responses.InternalServerError(w, err)
+		return
+	}
+
+	responses.StatusOkWithContent(w, accessToken)
+}
 
 
 func HandlerRefreshToken(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +100,7 @@ func HandlerRegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 		
 	}
-	responses.StatusOkWithContent(w, user)
+	responses.StatusOkWithContent(w, responses.User{Username: user.Username, Password: user.Password, Email: user.Email, Endpoint: user.Endpoint})
 }
 
 func HandlerLoginUser(w http.ResponseWriter, r *http.Request) {

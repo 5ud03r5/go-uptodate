@@ -33,6 +33,13 @@ type User struct {
 	CreatedAt time.Time	`bson:"created_at"`
 }
 
+type ServiceAccount struct {
+	ID string `bson:"_id,omitempty"`
+	AccountName string `bson:"account_name"`
+	Password string `bson:"password"`
+	CreatedAt time.Time	`bson:"created_at"`
+}
+
 type UserApplication struct {
 	ID string `bson:"_id,omitempty"`
 	ApplicationId string `bson:"application_id"`

@@ -108,11 +108,17 @@ func main() {
 		// Private routes
 		r.Group(func(routerPrivate chi.Router){
 			routerPrivate.Use(jwtauth.Verifier(auth.TokenAuth))
-			routerPrivate.Use(authenticatorMiddleware)
+			routerPrivate.Use(authenticatorUserMiddleware)
 
-			routerPrivate.Post("/", handlers.HandlerUpsertApplication)
 			routerPrivate.Post("/register", handlers.HandlerRegisterApplication)
 			routerPrivate.Post("/subscribe/{applicationName}", handlers.HandlerSubscribeToApplication)
+		})
+
+		// Private route service account
+		r.Group(func(routerPrivateSA chi.Router) {
+			routerPrivateSA.Use(jwtauth.Verifier(auth.TokenAuth))
+			routerPrivateSA.Use(authenticatorSAMiddleware)
+			routerPrivateSA.Post("/", handlers.HandlerUpsertApplication)
 		})
 	})
 
@@ -122,6 +128,7 @@ func main() {
 		r.Post("/register", handlers.HandlerRegisterUser)
 		r.Post("/login", handlers.HandlerLoginUser)
 		r.Post("/refresh", handlers.HandlerRefreshToken)
+		r.Post("/auth_token", handlers.HandlerGetServiceAccountAccessToken)
 	})
 
 	//

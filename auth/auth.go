@@ -113,13 +113,11 @@ func GenerateJWTTokens(additionalClaims map[string]interface{}) (jwtResponse, er
 }
 
 func GenerateJWTAccessToken(sub string, accessType string) (string, error) {
-	// Both refresh and access tokens consist of the same claims
-	// Difference is in sign key so refresh token cannot be used as an access token
-	// This stateless approach allows to keep it simple and fast
+	// Short time access access token
 
 	claims := make(map[string]interface{})
 
-	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
+	claims["exp"] = time.Now().Add(time.Minute * 5).Unix()
 	claims["iat"] = time.Now().Unix()
 	claims["sub"] = sub
 	claims["type"] = accessType

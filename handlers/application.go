@@ -69,10 +69,15 @@ func HandlerRegisterApplication(w http.ResponseWriter, r *http.Request) {
 		responses.InternalServerError(w, err)
 		return
 	}
-	
-	AppRegistryCache.Set(params.Name, true)
 
-	responses.StatusOkNoContent(w)
+	// Service account for application creation upon registration
+	serviceAccount, err := db.CreateServiceAccount(r.Context(), params.Name)
+	if err != nil {
+		responses.InternalServerError(w, err)
+		return
+	}
+
+	responses.StatusOkWithContent(w, responses.ServiceAccount{AccountName: serviceAccount.AccountName, Password: serviceAccount.Password})
 }
 
 func HandlerSubscribeToApplication(w http.ResponseWriter, r *http.Request) {
@@ -156,6 +161,19 @@ func HandlerUpsertApplication(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		AppRegistryCache.Set(params.Name, true)
+	}
+
+	// Claims unpack from context
+	_, claims, err := jwtauth.FromContext(r.Context())
+	if err != nil {
+		responses.InternalServerError(w, err)
+		return
+	}
+
+	// Needs to be application type
+	if claims["type"] != "service" {
+		responses.BadRequestError(w, errors.New("token needs to be service type"))
+		return
 	}
 
 	application := db.Application{
