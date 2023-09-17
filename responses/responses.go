@@ -1,4 +1,4 @@
-package custom
+package responses
 
 import (
 	"fmt"
@@ -23,4 +23,12 @@ func BadRequestError(w http.ResponseWriter, err error) {
 
 func InternalServerError(w http.ResponseWriter, err error) {
 	RespondWithError(w, 500, fmt.Sprintf("Internal Server Error: %s", err))
+}
+
+func StatusOkWithContent(w http.ResponseWriter, payload interface{}) {
+	RespondWithJSON(w, 200, payload)
+}
+
+func StatusOkNoContent(w http.ResponseWriter) {
+	RespondWithJSON(w, 201, struct{}{})
 }

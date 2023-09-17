@@ -8,6 +8,7 @@ import (
 
 	"github.com/5ud03r5/uptodate/custom"
 	"github.com/5ud03r5/uptodate/db"
+	"github.com/5ud03r5/uptodate/responses"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/jwtauth"
 )
@@ -23,21 +24,21 @@ func HandlerRegisterApplication(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		custom.BadRequestError(w, err)
+		responses.BadRequestError(w, err)
 		return
 	}
 
 	// Application registry existance check
 	cachedIsRegistered := AppRegistryCache.Get(params.Name)
 	if cachedIsRegistered != nil {
-		custom.BadRequestError(w, errors.New("application is already registered"))
+		responses.BadRequestError(w, errors.New("application is already registered"))
 		return
 	}
 	
 	if cachedIsRegistered == nil {
 		isRegistered := db.GetRegisteredApplication(r.Context(), params.Name)
 		if isRegistered {
-			custom.BadRequestError(w, errors.New("application is already registered"))
+			responses.BadRequestError(w, errors.New("application is already registered"))
 			return
 		}
 	}
@@ -45,13 +46,13 @@ func HandlerRegisterApplication(w http.ResponseWriter, r *http.Request) {
 	// Claims unpack from context
 	_, claims, err := jwtauth.FromContext(r.Context())
 	if err != nil {
-		custom.InternalServerError(w, err)
+		responses.InternalServerError(w, err)
 		return
 	}
 
 	// Needs to be user type
 	if claims["type"] != "user" {
-		custom.BadRequestError(w, errors.New("token needs to be user type"))
+		responses.BadRequestError(w, errors.New("token needs to be user type"))
 		return
 	}
 
@@ -59,19 +60,19 @@ func HandlerRegisterApplication(w http.ResponseWriter, r *http.Request) {
 	// User existance check
 	_, err = db.GetUserByUsername(r.Context(), username)
 	if err != nil {
-		custom.NotFoundError(w, err)
+		responses.NotFoundError(w, err)
 		return
 	}
 
 	err = db.RegisterApplication(r.Context(), params.Name, username)
 	if err != nil {
-		custom.InternalServerError(w, err)
+		responses.InternalServerError(w, err)
 		return
 	}
 	
 	AppRegistryCache.Set(params.Name, true)
 
-	custom.RespondWithJSON(w, 201, struct{}{})
+	responses.StatusOkNoContent(w)
 }
 
 func HandlerSubscribeToApplication(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +84,7 @@ func HandlerSubscribeToApplication(w http.ResponseWriter, r *http.Request) {
 	if cachedIsRegistered == nil {
 		isRegistered := db.GetRegisteredApplication(r.Context(), applicationName)
 		if !isRegistered {
-			custom.NotFoundError(w, errors.New("application is not registered"))
+			responses.NotFoundError(w, errors.New("application is not registered"))
 			return
 		}
 		AppRegistryCache.Set(applicationName, true)
@@ -92,13 +93,13 @@ func HandlerSubscribeToApplication(w http.ResponseWriter, r *http.Request) {
 	// Claims unpack from context
 	_, claims, err := jwtauth.FromContext(r.Context())
 	if err != nil {
-		custom.InternalServerError(w, err)
+		responses.InternalServerError(w, err)
 		return
 	}
 
 	// Needs to be user type
 	if claims["type"] != "user" {
-		custom.BadRequestError(w, errors.New("token needs to be user type"))
+		responses.BadRequestError(w, errors.New("token needs to be user type"))
 		return
 	}
 
@@ -108,26 +109,26 @@ func HandlerSubscribeToApplication(w http.ResponseWriter, r *http.Request) {
 	_, err = db.GetUserByUsername(r.Context(), username)
 
 	if err != nil {
-		custom.NotFoundError(w, err)
+		responses.NotFoundError(w, err)
 		return
 	}
 
 	err = db.CreateUserApplicationBinding(r.Context(), username, applicationName)
 	if err != nil {
-		custom.InternalServerError(w, err)
+		responses.InternalServerError(w, err)
 		return
 	}
-	custom.RespondWithJSON(w, 201, struct{}{})
+	responses.StatusOkNoContent(w)
 }
 
 func HandlerGetApplicationByName(w http.ResponseWriter, r *http.Request) {
 	applicationName := chi.URLParam(r, "applicationName")
 	applications, err := db.GetApplicationByName(r.Context(), applicationName)
 	if err != nil {
-		custom.NotFoundError(w, err)
+		responses.NotFoundError(w, err)
 		return
 	}
-	custom.RespondWithJSON(w, 200, applications)
+	responses.StatusOkWithContent(w, applications)
 }
 
 func HandlerUpsertApplication(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +144,7 @@ func HandlerUpsertApplication(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		custom.BadRequestError(w, err)
+		responses.BadRequestError(w, err)
 		return
 	}
 
@@ -151,7 +152,7 @@ func HandlerUpsertApplication(w http.ResponseWriter, r *http.Request) {
 	if cachedIsRegistered == nil {
 		isRegistered := db.GetRegisteredApplication(r.Context(), params.Name)
 		if !isRegistered {
-			custom.NotFoundError(w, errors.New("application is not registered"))
+			responses.NotFoundError(w, errors.New("application is not registered"))
 			return
 		}
 		AppRegistryCache.Set(params.Name, true)
@@ -167,8 +168,8 @@ func HandlerUpsertApplication(w http.ResponseWriter, r *http.Request) {
 
 	err = db.UpsertApplication(r.Context(), application)
 	if err != nil {
-		custom.InternalServerError(w, err)
+		responses.InternalServerError(w, err)
 		return
 	}
-	custom.RespondWithJSON(w, 201, struct{}{})
+	responses.StatusOkNoContent(w)
 }

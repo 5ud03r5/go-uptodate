@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/5ud03r5/uptodate/custom"
+	"github.com/5ud03r5/uptodate/responses"
 	"github.com/go-chi/jwtauth"
 	"github.com/lestrrat-go/jwx/jwt"
 )
@@ -15,11 +15,11 @@ func authenticatorMiddleware(next http.Handler) http.Handler {
 		token, _, err := jwtauth.FromContext(r.Context())
 
 		if err != nil {
-			custom.UnauthorizedError(w, err)
+			responses.UnauthorizedError(w, err)
 		}
 
 		if token == nil || jwt.Validate(token) != nil {
-			custom.UnauthorizedError(w, errors.New("missing or invalid token"))
+			responses.UnauthorizedError(w, errors.New("missing or invalid token"))
 		}
 		
 		next.ServeHTTP(w, r)
