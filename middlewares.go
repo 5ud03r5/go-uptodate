@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/5ud03r5/uptodate/responses"
+	responses "github.com/5ud03r5/uptodate/internal/responses"
 	"github.com/go-chi/jwtauth"
 	"github.com/lestrrat-go/jwx/jwt"
 )

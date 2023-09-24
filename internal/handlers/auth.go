@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/5ud03r5/uptodate/auth"
-	"github.com/5ud03r5/uptodate/db"
-	"github.com/5ud03r5/uptodate/responses"
+	auth "github.com/5ud03r5/uptodate/internal/auth"
+	db "github.com/5ud03r5/uptodate/internal/db"
+	responses "github.com/5ud03r5/uptodate/internal/responses"
 	"github.com/lestrrat-go/jwx/jwt"
 )
 func HandlerGetServiceAccountAccessToken(w http.ResponseWriter, r *http.Request) {

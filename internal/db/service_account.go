@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/5ud03r5/uptodate/auth"
+	auth "github.com/5ud03r5/uptodate/internal/auth"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )

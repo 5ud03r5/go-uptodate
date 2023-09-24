@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/5ud03r5/uptodate/custom"
-	"github.com/5ud03r5/uptodate/db"
-	"github.com/5ud03r5/uptodate/responses"
+	custom "github.com/5ud03r5/uptodate/internal"
+	db "github.com/5ud03r5/uptodate/internal/db"
+	responses "github.com/5ud03r5/uptodate/internal/responses"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/jwtauth"
 )
